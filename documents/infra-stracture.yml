@@ -1,0 +1,57 @@
+@startuml
+!define RECTANGLE class
+
+actor ユーザー
+actor 管理者
+
+RECTANGLE "AWS クラウド" as AWS {
+    RECTANGLE "アプリケーションロードバランサ" as ALB {
+        RECTANGLE "Amazon ECS \n (Go REST API)" as ECS
+        RECTANGLE "AWS Lambda \n (リアルタイムWebSocket)" as Lambda
+    }
+
+    RECTANGLE "Amazon API Gateway" as APIGateway
+
+    RECTANGLE "Amazon RDS \n (PostgreSQL/MySQL)" as RDS
+    RECTANGLE "Amazon DynamoDB" as DynamoDB
+    RECTANGLE "Amazon ElastiCache \n (Redis)" as ElastiCache
+
+    RECTANGLE "Amazon S3 + CloudFront \n (静的ファイル)" as S3
+    RECTANGLE "AWS Amplify / Vercel \n (Next.js フロントエンド)" as Amplify
+
+    RECTANGLE "Amazon SNS / SES \n (通知)" as SNS
+    RECTANGLE "Amazon Cognito \n (認証)" as Cognito
+    RECTANGLE "AWS Secrets Manager" as SecretsManager
+    RECTANGLE "Amazon EventBridge \n (予約通知のスケジュール)" as EventBridge
+    RECTANGLE "Amazon QuickSight \n (利用状況の分析)" as QuickSight
+    RECTANGLE "Amazon CloudWatch \n (モニタリング)" as CloudWatch
+    RECTANGLE "AWS X-Ray \n (トレーシング)" as XRay
+}
+
+ユーザー --> Amplify : "Next.jsフロントエンドにアクセス"
+Amplify --> ALB : "フロントエンドAPIリクエスト"
+管理者 --> Amplify : "管理インターフェースにアクセス"
+ALB --> ECS : "REST APIリクエスト (Go)"
+ECS --> RDS : "ユーザーと予約データの読み書き"
+ECS --> DynamoDB : "予約と利用履歴の管理"
+ECS --> ElastiCache : "リアルタイムの空き状況確認"
+ECS --> Cognito : "ユーザー認証"
+ECS --> SNS : "リマインダー通知送信"
+ECS --> SecretsManager : "セキュアな認証情報にアクセス"
+
+APIGateway --> Lambda : "リアルタイム空き状況 (WebSocket)"
+Lambda --> ElastiCache : "空き状況データの取得・更新"
+
+EventBridge --> SNS : "スケジュール通知をトリガー"
+SNS --> ユーザー : "メール/SMSでリマインダー送信"
+
+管理者 --> QuickSight : "利用状況の分析にアクセス"
+QuickSight --> RDS : "利用データの分析"
+QuickSight --> DynamoDB : "利用履歴の分析"
+
+CloudWatch --> ECS : "パフォーマンスをモニタリング"
+CloudWatch --> ALB : "ロードバランサをモニタリング"
+XRay --> ECS : "APIリクエストのトレース"
+
+S3 --> CloudFront : "静的アセットを配信"
+@enduml

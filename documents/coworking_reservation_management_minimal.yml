@@ -1,3 +1,69 @@
+@startuml
+actor User
+actor Admin
+boundary "Application Load Balancer (ALB)" as ALB
+boundary "Amazon API Gateway" as APIGateway
+entity "Amazon ECS (Go REST API)" as ECS
+entity "AWS Lambda (リアルタイムWebSocket)" as Lambda
+database "Amazon RDS (PostgreSQL/MySQL)" as RDS
+database "Amazon DynamoDB" as DynamoDB
+database "Amazon ElastiCache (Redis)" as ElastiCache
+entity "Amazon S3 + CloudFront" as S3
+entity "AWS Amplify / Vercel (Next.jsフロントエンド)" as Amplify
+entity "Amazon SNS / SES (通知)" as SNS
+entity "Amazon Cognito (認証)" as Cognito
+entity "AWS Secrets Manager" as SecretsManager
+entity "Amazon EventBridge (スケジュール通知)" as EventBridge
+entity "Amazon QuickSight (利用状況分析)" as QuickSight
+entity "Amazon CloudWatch (モニタリング)" as CloudWatch
+entity "AWS X-Ray (トレース)" as XRay
+
+== フロントエンドへのアクセス ==
+User -> Amplify : "Next.jsフロントエンドにアクセス"
+Amplify -> S3 : "静的ファイル取得 (CloudFrontキャッシュ利用)"
+S3 --> Amplify : "静的ファイルを返す"
+Amplify -> Cognito : "ログインリクエスト"
+Cognito --> Amplify : "認証結果を返す"
+
+== REST APIリクエスト ==
+User -> Amplify : "APIリクエスト"
+Amplify -> ALB : "リクエストをALBに送信"
+ALB -> ECS : "リクエストをECSにルーティング (Go REST API)"
+ECS -> SecretsManager : "認証情報を取得 (データベース接続用)"
+SecretsManager --> ECS : "認証情報を返す"
+ECS -> RDS : "データベースリクエスト (ユーザーや予約情報の読み書き)"
+RDS --> ECS : "データ返却"
+ECS -> ElastiCache : "キャッシュチェック (空き状況の確認)"
+ElastiCache --> ECS : "キャッシュ結果を返す"
+ECS -> Amplify : "APIレスポンスを返却"
+Amplify -> User : "レスポンスを返す"
+
+== リアルタイムWebSocketリクエスト ==
+User -> APIGateway : "WebSocketリクエスト (空き状況確認)"
+APIGateway -> Lambda : "WebSocketリクエストをLambdaに転送"
+Lambda -> ElastiCache : "空き状況のデータを取得"
+ElastiCache --> Lambda : "空き状況データを返す"
+Lambda -> APIGateway : "WebSocketレスポンスを返す"
+APIGateway -> User : "空き状況データをリアルタイムに送信"
+
+== リマインダー通知 ==
+EventBridge -> SNS : "予約前日のリマインダー通知をトリガー"
+SNS -> User : "メールまたはSMSでリマインダー送信"
+
+== 管理者による利用状況分析 ==
+Admin -> QuickSight : "利用状況の分析リクエスト"
+QuickSight -> RDS : "利用データを取得"
+QuickSight -> DynamoDB : "履歴データを取得"
+DynamoDB --> QuickSight : "履歴データ返却"
+RDS --> QuickSight : "利用データ返却"
+QuickSight -> Admin : "分析結果を表示"
+
+== システムモニタリング ==
+CloudWatch -> ECS : "パフォーマンスとエラーレートの監視"
+CloudWatch -> ALB : "ALBのリクエスト数とエラーレートを監視"
+XRay -> ECS : "リクエストのトレース"
+XRay -> Lambda : "Lambdaのトレース"
+=======
 
 @startuml
 actor User
