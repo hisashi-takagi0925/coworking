@@ -1,0 +1,117 @@
+
+@startuml
+actor User
+actor Admin
+boundary ReservationSystem
+database Database
+
+== 利用者側ユースケース ==
+
+== 会員登録 ==
+User -> ReservationSystem: 会員登録リクエスト
+ReservationSystem -> Database: ユーザーデータ保存
+Database --> ReservationSystem: 保存完了
+ReservationSystem -> User: 登録完了通知
+
+== ログイン ==
+User -> ReservationSystem: ログインリクエスト
+ReservationSystem -> Database: ユーザー認証
+Database --> ReservationSystem: 認証結果
+ReservationSystem -> User: ログイン成功または失敗通知
+
+== パスワード再設定 ==
+User -> ReservationSystem: パスワード再設定リクエスト
+ReservationSystem -> Database: ユーザー確認（メール/ID）
+Database --> ReservationSystem: 確認結果
+ReservationSystem -> User: 再設定リンク送信（メール）
+User -> ReservationSystem: 新しいパスワード入力
+ReservationSystem -> Database: パスワード更新
+Database --> ReservationSystem: 更新完了
+ReservationSystem -> User: パスワード再設定完了通知
+
+== 退会 ==
+User -> ReservationSystem: 退会リクエスト
+ReservationSystem -> Database: ユーザーデータ削除
+Database --> ReservationSystem: 削除完了
+ReservationSystem -> User: 退会完了通知
+
+== セッションタイムアウト ==
+ReservationSystem -> User: セッションタイムアウト通知
+User -> ReservationSystem: 再ログインリクエスト
+ReservationSystem -> Database: ユーザー認証
+Database --> ReservationSystem: 認証結果
+ReservationSystem -> User: 再ログイン成功または失敗通知
+
+== スペース予約 ==
+User -> ReservationSystem: スペース予約リクエスト
+ReservationSystem -> Database: 空き状況チェック
+Database --> ReservationSystem: 空き状況情報
+ReservationSystem -> User: 予約確認
+User -> ReservationSystem: 予約確定
+ReservationSystem -> Database: 予約情報保存
+Database --> ReservationSystem: 保存完了
+ReservationSystem -> User: 予約完了通知
+
+== リアルタイム空き状況表示 ==
+User -> ReservationSystem: 空き状況確認リクエスト
+ReservationSystem -> Database: 空き状況取得
+Database --> ReservationSystem: 空き状況情報
+ReservationSystem -> User: 空き状況表示
+
+== リマインダー通知 ==
+ReservationSystem -> Database: 明日の予約確認
+Database --> ReservationSystem: 予約データ
+ReservationSystem -> User: リマインダー通知（メール/SMS）
+
+== 利用履歴管理 ==
+User -> ReservationSystem: 利用履歴確認リクエスト
+ReservationSystem -> Database: 利用履歴取得
+Database --> ReservationSystem: 利用履歴データ
+ReservationSystem -> User: 利用履歴表示
+
+== フィードバック送信 ==
+User -> ReservationSystem: フィードバック送信
+ReservationSystem -> Database: フィードバック保存
+Database --> ReservationSystem: 保存完了
+ReservationSystem -> User: フィードバック受理通知
+
+== 管理者側ユースケース ==
+
+== 利用状況分析 ==
+Admin -> ReservationSystem: 利用状況分析リクエスト
+ReservationSystem -> Database: 利用データ取得
+Database --> ReservationSystem: 利用データ
+ReservationSystem -> Admin: 利用状況の分析結果表示
+
+== フィードバック確認 ==
+Admin -> ReservationSystem: フィードバック確認リクエスト
+ReservationSystem -> Database: フィードバックデータ取得
+Database --> ReservationSystem: フィードバックデータ
+ReservationSystem -> Admin: フィードバック内容表示
+
+== 予約管理 ==
+Admin -> ReservationSystem: 予約一覧の確認
+ReservationSystem -> Database: 予約データ取得
+Database --> ReservationSystem: 予約データ
+ReservationSystem -> Admin: 予約一覧表示
+
+== 予約キャンセル ==
+Admin -> ReservationSystem: 予約キャンセルリクエスト
+ReservationSystem -> Database: 予約データ削除
+Database --> ReservationSystem: キャンセル完了
+ReservationSystem -> Admin: キャンセル確認通知
+ReservationSystem -> User: 予約キャンセル通知
+
+== 予約変更 ==
+Admin -> ReservationSystem: 予約変更リクエスト
+ReservationSystem -> Database: 予約データ更新
+Database --> ReservationSystem: 変更完了
+ReservationSystem -> Admin: 予約変更確認通知
+ReservationSystem -> User: 予約変更通知
+
+== 会員プラン管理 ==
+Admin -> ReservationSystem: 会員プランの追加・編集
+ReservationSystem -> Database: プランデータ更新
+Database --> ReservationSystem: 更新完了
+ReservationSystem -> Admin: プランの変更結果表示
+@enduml
