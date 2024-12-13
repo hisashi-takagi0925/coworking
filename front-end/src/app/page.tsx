@@ -1,4 +1,4 @@
-import { httpGet } from "@/repository/shared/httpClient/get";
+import { httpGet } from "@/repository/server/shared/httpClient/get";
 import Image from "next/image";
 import { Suspense } from "react";
 
